@@ -7,20 +7,33 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+plugin enhancer {
+    provider = '@core/enhancer'
+    output = "node_modules/.zenstack"
+    preserveTsFiles = true
+} 
+
+plugin hooks {
+  provider = '@zenstackhq/swr'
+  output = "./src/lib/hooks"
+}
+
 model User {
   id Int @id @default(autoincrement())
   contents Content[]
+	vehicle Vehicle[]
 
   @@allow('create,read', true)
   @@allow('all', auth() == this)
+
 }
 
 model Content {
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId Int
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId Int? @default(auth().id)
   published Boolean @default(false)
   contentType String
 
@@ -37,4 +50,25 @@ model Post extends Content {
 model Video extends Content {
   name String
   duration Int
+}
+
+model Vehicle {
+  id String @id @default(cuid())
+  model String
+  year Int
+  type String
+  creator User? @relation(fields: [createdBy], references: [id])
+  createdBy Int? @default(auth().id)
+  @@allow('create,read', true)
+  @@allow('delete', auth() == creator)
+
+  @@delegate(type)
+}
+
+model Car extends Vehicle {
+  isConvertible Boolean
+}
+
+model Motorcycle extends Vehicle {
+  hasHeatedGrips Boolean
 }

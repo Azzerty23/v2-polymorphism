@@ -17,6 +17,7 @@ generator client {
 model User {
     id Int @id() @default(autoincrement())
     contents Content[]
+    vehicle Vehicle[]
 }
 
 /// @@delegate(contentType)
@@ -26,8 +27,8 @@ model Content {
     id Int @id() @default(autoincrement())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt()
-    owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-    ownerId Int
+    owner User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    ownerId Int?
     published Boolean @default(false)
     contentType String
     delegate_aux_post Post?
@@ -49,4 +50,34 @@ model Video {
     name String
     duration Int
     delegate_aux_content Content @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// @@allow('create,read', true)
+/// @@allow('delete', auth() == creator)
+/// @@delegate(type)
+model Vehicle {
+    id String @id() @default(cuid())
+    model String
+    year Int
+    type String
+    creator User? @relation(fields: [createdBy], references: [id])
+    createdBy Int?
+    delegate_aux_car Car?
+    delegate_aux_motorcycle Motorcycle?
+}
+
+/// @@allow('create,read', true)
+/// @@allow('delete', auth() == creator)
+model Car {
+    id String @id()
+    isConvertible Boolean
+    delegate_aux_vehicle Vehicle @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// @@allow('create,read', true)
+/// @@allow('delete', auth() == creator)
+model Motorcycle {
+    id String @id()
+    hasHeatedGrips Boolean
+    delegate_aux_vehicle Vehicle @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
